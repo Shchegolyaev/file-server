@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+
+  postgres-fastapi:
+    image: postgres:14.5
+    ports:
+      - "5432:5432"
+    restart: always
+    env_file:
+      - ./src/.env
+
+  redis:
+    image: redis:7.0.5
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    depends_on:
+      - postgres-fastapi
+    env_file:
+      - ./src/.env
+
+  backend:
+    build: .
+    command: sh -c "${COMMANDS_BEFORE_START_BACK}"
+    ports:
+      - ${PROJECT_PORT}:${PROJECT_PORT}
+    volumes:
+      - ./src/files:/code/src/files/
+    env_file:
+      - ./src/.env
+    depends_on:
+      - postgres-fastapi
+      - redis
+
+  nginx:
+    image: nginx:1.19.3
+    ports:
+      - ${NGINX_PORT}:${NGINX_PORT}
+    volumes:
+      - ./services/nginx.conf:/etc/nginx/conf.d/site.conf.template
+      - ./src/files:/code/src/files/
+    command: sh -c "${COMMANDS_BEFORE_START_NGINX}"
+    restart: always
+    env_file:
+      - ./src/.env
+
+    depends_on:
+      - backend
