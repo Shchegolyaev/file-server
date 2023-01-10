@@ -13,15 +13,16 @@ class User(Base):
     id = Column(UUIDType(binary=False), primary_key=True, default=uuid.uuid1)
     username = Column(String(125), nullable=False, unique=True)
     password = Column(String(125), nullable=False)
-    files = relationship('File', backref='user')
+    files = relationship('File', back_populates="user", passive_deletes=True)
     created_at = Column(DateTime, index=True, default=datetime.utcnow)
 
 
 class File(Base):
     __tablename__ = 'files'
     id = Column(UUIDType(binary=False), primary_key=True, default=uuid.uuid1)
-    user_id = Column(UUIDType, ForeignKey('users.id'), nullable=False,
-                     index=True)
+    user_id = Column(UUIDType, ForeignKey('users.id', ondelete="CASCADE"),
+                     nullable=False, index=True)
+    user = relationship("User", back_populates="files")
     name = Column(String(125), nullable=False)
     created_at = Column(DateTime, index=True, default=datetime.utcnow)
     path = Column(String(255), nullable=False, unique=True)

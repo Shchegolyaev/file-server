@@ -4,33 +4,40 @@ services:
 
   postgres-fastapi:
     image: postgres:14.5
-    ports:
-      - "5432:5432"
+    expose:
+      - ${POSTGRES_EXPOSE}
+    healthcheck:
+      test: "pg_isready --username=postgres && psql --username=postgres --list"
+      timeout: 10s
+      retries: 20
     restart: always
     env_file:
-      - .env
+      - .env.sample
 
   redis:
     image: redis:7.0.5
-    ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    expose:
+      - ${REDIS_PORT}
     depends_on:
       - postgres-fastapi
     env_file:
-      - .env
+      - .env.sample
 
   backend:
     build: .
-    command: sh -c "${COMMANDS_BEFORE_START_BACK}"
     ports:
       - ${PROJECT_PORT}:${PROJECT_PORT}
     volumes:
       - ./src/files:/code/src/files/
     env_file:
-      - .env
+      - .env.sample
     depends_on:
-      - postgres-fastapi
-      - redis
+      postgres-fastapi:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   nginx:
     image: nginx:1.19.3
@@ -42,7 +49,7 @@ services:
     command: sh -c "${COMMANDS_BEFORE_START_NGINX}"
     restart: always
     env_file:
-      - .env
+      - .env.sample
 
     depends_on:
       - backend

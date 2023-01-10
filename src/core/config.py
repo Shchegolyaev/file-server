@@ -39,8 +39,8 @@ class AppSettings(BaseSettings):
     )
 
     class Config:
-        # env_file = '../../.env'
-        env_file = os.path.dirname(BASE_DIR) + '/.env'
+        # env_file = '../../.env.sample'
+        env_file = os.path.dirname(BASE_DIR) + '/.env.sample'
 
 
 app_settings = AppSettings()

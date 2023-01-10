@@ -76,7 +76,7 @@ class RepositoryUserDB(Repository, Generic[ModelType, CreateSchemaType]):
             return False
         return user
 
-    async def get_user_by_username(self, db: AsyncSession, username: str):
+    async def _get_user_by_username(self, db: AsyncSession, username: str):
         statement = select(User).where(User.username == username)
         results = await db.execute(statement=statement)
         return results.scalar_one_or_none()
@@ -96,7 +96,7 @@ class RepositoryUserDB(Repository, Generic[ModelType, CreateSchemaType]):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail="Could not validate credentials",
                                 headers={"WWW-Authenticate": "Bearer"},)
-        user = await self.get_user_by_username(db=db, username=username)
+        user = await self._get_user_by_username(db=db, username=username)
         if user is None:
             raise credentials_exception
         return user

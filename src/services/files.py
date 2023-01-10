@@ -33,9 +33,9 @@ class RepositoryFileDB(Repository, Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self._model = model
 
-    async def write_to_file(self,
-                            file_obj: FileObj,
-                            full_file_path: str, ):
+    async def _write_to_file(self,
+                             file_obj: FileObj,
+                             full_file_path: str, ):
         with open(full_file_path, 'wb') as buffer:
             await copyfileobj(file_obj.file, buffer)
 
@@ -55,8 +55,8 @@ class RepositoryFileDB(Repository, Generic[ModelType]):
             else:
                 os.mkdir(path)
                 await create_dir_info(db=db, path=path)
-        await self.write_to_file(file_obj=file_obj,
-                                 full_file_path=full_file_path)
+        await self._write_to_file(file_obj=file_obj,
+                                  full_file_path=full_file_path)
         size = os.path.getsize(full_file_path)
         new_file = model(name=file_obj.filename,
                          path=file_path,
@@ -73,7 +73,7 @@ class RepositoryFileDB(Repository, Generic[ModelType]):
                        file_obj: FileObj,
                        full_file_path: str,
                        file_info: Type[File]):
-        await self.write_to_file(
+        await self._write_to_file(
             file_obj=file_obj,
             full_file_path=full_file_path
         )
@@ -141,12 +141,11 @@ class RepositoryFileDB(Repository, Generic[ModelType]):
                 full_file_path=full_file_path,
                 file_info=file_in_storage,
                 file_obj=file_obj)
-        else:
-            return await self.create_file(
-                db=db,
-                file_path=file_path,
-                full_file_path=full_file_path,
-                create_dir_info=self.create_dir_info,
-                file_obj=file_obj,
-                model=self._model,
-                user_obj=user_obj)
+        return await self.create_file(
+            db=db,
+            file_path=file_path,
+            full_file_path=full_file_path,
+            create_dir_info=self.create_dir_info,
+            file_obj=file_obj,
+            model=self._model,
+            user_obj=user_obj)
